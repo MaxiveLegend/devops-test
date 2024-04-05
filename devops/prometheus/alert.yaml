@@ -1,0 +1,6 @@
+groups:
+  - name: DemoAlerts
+    rules:
+      - alert: "On API down"
+        expr: http_request_duration_seconds_sum{job="devops-api", path="/users"} > 1
+        for: 20s

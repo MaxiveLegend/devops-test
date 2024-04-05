@@ -1,8 +1,12 @@
 var express = require('express');
 var router = express.Router();
 const {db} = require("../services/database");
+const client = require("prom-client");
+
+const guage = new client.Gauge({ name: "num_of_users_get_requests", help: "The amount of times the 'users' have been retrieved" });
 
 router.get('/', async (req, res) => {
+    guage.inc(1);
     let users = await db.collection('users').find().toArray();
     res.json(users);
 });

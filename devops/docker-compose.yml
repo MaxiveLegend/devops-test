@@ -12,14 +12,14 @@ services:
         target: /data/db
     restart: on-failure
 
-  devops-api:
+  api:
     container_name: devops-api
     build:
       dockerfile: Dockerfile
     networks:
       - net
     ports:
-      - 3000:3000
+      - "3000:3000"
     depends_on:
       - database
     restart: on-failure
@@ -27,6 +27,35 @@ services:
       MONGO_URL: mongodb://mongodb:27017
       DB_NAME: mydb
 
+  database-exporter:
+    image: bitnami/mongodb-exporter
+    container_name: mongo-exporter
+    networks:
+      - net
+    depends_on:
+      - database
+    restart: on-failure
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017
+      DB_NAME: mydb
+
+  monitor:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    networks:
+      - net
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    command: --web.enable-lifecycle --config.file=/etc/prometheus/prometheus.yaml
+    depends_on:
+      - api
+    restart: on-failure
+
+volumes:
+  prometheus-data:
 
 networks:
   net:
