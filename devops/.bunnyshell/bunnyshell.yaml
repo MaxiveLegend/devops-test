@@ -1,0 +1,33 @@
+kind: Environment
+name: DevOps-acceptance
+type: primary
+urlHandle: devopsmblhacceptance
+components:
+  -
+    kind: Database
+    name: database
+    dockerCompose:
+      environment:
+        DB_NAME: mydb
+        MONGO_URL: 'mongodb://mongodb:27017'
+      image: 'mongo:latest'
+  -
+    kind: Application
+    name: devops-api
+    gitRepo: 'https://github.com/MaxiveLegend/devops-test.git'
+    gitBranch: main
+    gitApplicationPath: devops
+    dockerCompose:
+      build:
+        context: ./devops
+        dockerfile: Dockerfile
+      environment:
+        DB_NAME: mydb
+        MONGO_URL: 'mongodb://mongodb:27017'
+      ports:
+        - '3000:3000'
+    hosts:
+      -
+        hostname: 'devops-api-{{ env.base_domain }}'
+        path: /
+        servicePort: 3000
