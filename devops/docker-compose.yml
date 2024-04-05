@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  database:
+    image: mongo:latest
+    container_name: mongodb
+    networks:
+      - net
+    volumes:
+      - type: bind
+        source: ./data
+        target: /data/db
+    restart: on-failure
+    env_file:
+      - .env
+
+  devops-api:
+    container_name: devops-api
+    build:
+      dockerfile: Dockerfile
+    networks:
+      - net
+    ports:
+      - 3000:3000
+    depends_on:
+      - database
+    restart: on-failure
+    env_file:
+      - .env
+
+
+networks:
+  net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.19.0.0/16
+          gateway: 172.19.0.1
