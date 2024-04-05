@@ -53,19 +53,8 @@ services:
     ports:
       - "3000:3000"
 
-  alertmanager:
-    image: prom/alertmanager:v0.23.0
-    container_name: alertmanager
-    ports:
-      - "9093:9093"
-    volumes:
-      - "./alertmanager:/config"
-      - alertmanager-data:/data
-    command: --config.file=/config/alertmanager.yml --log.level=debug
-
 volumes:
   prometheus-data:
-  alertmanager-data:
 
 networks:
   net:
