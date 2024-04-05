@@ -11,6 +11,14 @@ router.get('/', async (req, res) => {
     res.json(users);
 });
 
+router.get('/slow', async (req, res) => {
+    guage.inc(1);
+    let users = await db.collection('users').find().toArray();
+    setTimeout(() => {
+        res.json(users);
+    }, 3000);
+});
+
 router.post('/', (req, res) => {
     db.collection('users').insertOne(req.body)
         .then((user) => res.status(201).json({"id": user.insertedId}))
