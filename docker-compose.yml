@@ -8,21 +8,18 @@ services:
       - net
     volumes:
       - type: bind
-        source: ./data
+        source: ./devops/data
         target: /data/db
     restart: on-failure
 
   api:
     container_name: devops-api
     build:
-      dockerfile: Dockerfile
+      dockerfile: devops/Dockerfile
     networks:
       - net
     ports:
-      - "3000:3000"
-    depends_on:
-      - database
-    restart: on-failure
+      - "5000:3000"
     environment:
       MONGO_URL: mongodb://mongodb:27017
       DB_NAME: mydb
@@ -32,9 +29,6 @@ services:
     container_name: mongo-exporter
     networks:
       - net
-    depends_on:
-      - database
-    restart: on-failure
     environment:
       MONGODB_URI: mongodb://mongodb:27017
       DB_NAME: mydb
@@ -50,15 +44,21 @@ services:
       - ./prometheus:/etc/prometheus
       - prometheus-data:/prometheus
     command: --web.enable-lifecycle --config.file=/etc/prometheus/prometheus.yaml
-    depends_on:
-      - api
-    restart: on-failure
+
+  grafana:
+    build: ./grafana
+    container_name: grafana
+    networks:
+      - net
+    ports:
+      - "3000:3000"
 
 volumes:
   prometheus-data:
 
 networks:
   net:
+    name: devops_net
     driver: bridge
     ipam:
       config:

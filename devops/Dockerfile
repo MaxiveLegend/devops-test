@@ -1,7 +1,7 @@
 FROM node:latest
 WORKDIR /usr/src
 
-COPY . .
+COPY ./* .
 
 RUN npm i
 
