@@ -10,6 +10,7 @@ const CREATE_QUERY =
     );`;
 
 const INSERT_QUERY = `INSERT INTO banned_users VALUES(1, "Max");`
+
 const GET_QUERY = `SELECT * FROM banned_users`;
 
 DB.serialize(() => {

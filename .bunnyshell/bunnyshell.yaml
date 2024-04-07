@@ -1,19 +1,11 @@
 kind: Environment
-name: DevOps-acceptance
+name: DevOps-test
 type: primary
-urlHandle: devopsmblhacceptance
+urlHandle: devopsmblhtest
 components:
   -
-    kind: Database
-    name: database
-    dockerCompose:
-      environment:
-        DB_NAME: mydb
-        MONGO_URL: 'mongodb://mongodb:27017'
-      image: 'mongo:latest'
-  -
     kind: Application
-    name: devops-api
+    name: api
     gitRepo: 'https://github.com/MaxiveLegend/devops-test.git'
     gitBranch: main
     gitApplicationPath: devops
@@ -25,9 +17,105 @@ components:
         DB_NAME: mydb
         MONGO_URL: 'mongodb://mongodb:27017'
       ports:
-        - '3000:3000'
+        - '80:3000'
     hosts:
       -
-        hostname: 'devops-api-{{ env.base_domain }}'
+        hostname: 'api-{{ env.base_domain }}'
         path: /
-        servicePort: 3000
+        servicePort: 80
+  -
+    kind: Database
+    name: database
+    dockerCompose:
+      image: 'mongo:4'
+  -
+    kind: Database
+    name: database-exporter
+    dockerCompose:
+      environment:
+        DB_NAME: mydb
+        MONGODB_URI: 'mongodb://mongodb:27017'
+      image: bitnami/mongodb-exporter
+  -
+    kind: Application
+    name: extra-service
+    gitRepo: 'https://github.com/MaxiveLegend/devops-test.git'
+    gitBranch: main
+    gitApplicationPath: extra-service
+    dockerCompose:
+      build:
+        context: ./extra-service
+        dockerfile: Dockerfile
+      ports:
+        - '80:9000'
+    hosts:
+      -
+        hostname: 'extra-service-{{ env.base_domain }}'
+        path: /
+        servicePort: 80
+  -
+    kind: Application
+    name: grafana
+    gitRepo: 'https://github.com/MaxiveLegend/devops-test.git'
+    gitBranch: main
+    gitApplicationPath: grafana
+    dockerCompose:
+      build:
+        context: ./grafana
+        dockerfile: Dockerfile
+      ports:
+        - '80:3000'
+    hosts:
+      -
+        hostname: 'grafana-{{ env.base_domain }}'
+        path: /
+        servicePort: 80
+  -
+    kind: Service
+    name: monitor
+    dockerCompose:
+      command:
+        - '--web.enable-lifecycle'
+        - '--config.file=/etc/prometheus/prometheus.yaml'
+      image: 'prom/prometheus:latest'
+      ports:
+        - '80:9090'
+    hosts:
+      -
+        hostname: 'monitor-{{ env.base_domain }}'
+        path: /
+        servicePort: 80
+    volumes:
+      -
+        name: prometheus-data
+        mount: /prometheus
+        subPath: ''
+  -
+    kind: Application
+    name: rabbitmq
+    gitRepo: 'https://github.com/MaxiveLegend/devops-test.git'
+    gitBranch: main
+    gitApplicationPath: /
+    dockerCompose:
+      build:
+        context: .
+        dockerfile: rabbitmq/Dockerfile
+      healthcheck:
+        test:
+          - CMD-SHELL
+          - 'curl -sS http://localhost:15672 || exit 1'
+        timeout: 10s
+        interval: 30s
+        retries: 5
+      ports:
+        - '80:15672'
+    hosts:
+      -
+        hostname: 'rabbitmq-{{ env.base_domain }}'
+        path: /
+        servicePort: 80
+volumes:
+  -
+    name: prometheus-data
+    size: 1Gi
+    type: disk
