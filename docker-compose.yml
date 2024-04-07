@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   database:
-    image: mongo:latest
+    image: mongo:4
     container_name: mongodb
     networks:
       - net
@@ -14,8 +14,12 @@ services:
 
   api:
     container_name: devops-api
+    depends_on: 
+      - rabbitmq
+    restart: on-failure
     build:
-      dockerfile: devops/Dockerfile
+      context: ./devops
+      dockerfile: Dockerfile
     networks:
       - net
     ports:
@@ -52,6 +56,34 @@ services:
       - net
     ports:
       - "3000:3000"
+
+  rabbitmq:
+    build:
+      dockerfile: rabbitmq/Dockerfile
+    container_name: rabbitmq
+    networks:
+      - net
+    ports:
+      - "15672:15672"
+    # Check if rabbitmq is ready for connections yet
+    healthcheck:
+      test: curl -sS http://localhost:15672 || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  extra-service:
+    build:
+      context: ./extra-service
+      dockerfile: Dockerfile
+    container_name: extra-service
+    depends_on: 
+      - rabbitmq
+    restart: on-failure
+    networks:
+      - net
+    ports:
+      - "9000:9000"
 
 volumes:
   prometheus-data:

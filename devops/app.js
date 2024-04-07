@@ -16,7 +16,7 @@ const metricsMiddleware = promBundle({
 
 const indexRouter = require('./routes');
 const usersRouter = require('./routes/users');
-
+const bannedUsersRouter = require('./routes/bannedusers');
 const app = express();
 
 // view engine setup
@@ -33,7 +33,7 @@ app.use(metricsMiddleware)
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-
+app.use('/bannedusers', bannedUsersRouter)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
